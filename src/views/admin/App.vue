@@ -1,13 +1,26 @@
 <template>
   <div id="app">
-    <img src="./assets/logo.png">
-    <router-view/>
+    <img-show :src="logo" alt="LOGO" />
+    <hello name="admin"/>
   </div>
 </template>
 
 <script>
+import Hello from '@/components/Hello'
+import ImgShow from './components/ImgShow'
+import logo from '@/assets/logo.png'
+
 export default {
-  name: 'App'
+  name: 'App',
+  components: {
+    Hello,
+    ImgShow
+  },
+  data () {
+    return {
+      logo
+    }
+  }
 }
 </script>
 
