@@ -22,11 +22,7 @@ const webpackConfig = {
   // these devServer options should be customized in /config/index.js
   devServer: {
     clientLogLevel: 'warning',
-    historyApiFallback: {
-      rewrites: [
-        { from: /.*/, to: path.posix.join(config.dev.assetsPublicPath, 'index.html') }
-      ]
-    },
+    historyApiFallback: config.dev.historyApiFallback,
     hot: true,
     contentBase: false, // since we use CopyWebpackPlugin.
     compress: true,

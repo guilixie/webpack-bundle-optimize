@@ -1,0 +1,375 @@
+/* 公共样式 */
+blockquote, body, button, dd, dl, dt, fieldset, form, h1, h2, h3, h4, h5, h6, hr, input, legend, li, ol, p, pre, td, textarea, th, ul {
+  margin: 0;
+  padding: 0;
+}
+html, body {
+  font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+  font-size: 14px;
+  height: 100%;
+}
+
+#app {
+  padding: 15px 0;
+  box-sizing: border-box;
+  height: calc(100% - 69px);
+  overflow: auto;
+}
+
+.webapp-mw {
+  min-width: 1024px;
+}
+
+.box-all {
+  height: 100%;
+}
+.box-half {
+  height: 50%;
+}
+
+.text-right {
+  text-align: right !important;
+}
+.text-center {
+  text-align: center !important;
+}
+
+.pd0{
+  padding: 0 !important;
+}
+.pd20 {
+  padding: 20px !important;
+}
+.pdt20 {
+  padding-top: 20px !important;
+}
+.pdb20 {
+  padding-bottom: 20px !important;
+}
+.pdl15{
+  padding-left: 15px !important;
+}
+.pdr15 {
+  padding-right: 15px !important;
+}
+.pdt10{
+  padding-top: 10px !important;
+}
+.pdb10 {
+  padding-bottom: 10px !important;
+}
+
+
+.fs12 {
+  font-size: 12px !important;
+}
+.fs13 {
+  font-size: 13px !important;
+}
+.fs14{
+  font-size: 14px !important;
+}
+.fs15 {
+  font-size: 15px !important;
+}
+.fs16 {
+  font-size: 16px !important;
+}
+.fs18 {
+  font-size: 18px !important;
+}
+.fs20 {
+  font-size: 20px !important;
+}
+.fs22 {
+  font-size: 22px !important;
+}
+.fs24 {
+  font-size: 24px !important;
+}
+
+.color-danger {
+  color: #f56c6c !important;
+}
+.color-blue {
+  color: #409eff !important;
+}
+.color-success {
+  color: #67c23a !important;
+}
+.color-warning {
+  color: #e6a23c !important;
+}
+.color-pink {
+  color: #f6dcc7 !important;
+}
+.color-apricot {
+  color: #f8b878 !important;
+}
+.color-maize {
+  color: #f2bc00 !important;
+}
+.color-info {
+  color: #909399 !important;
+}
+
+.vertical-top {
+  vertical-align: top !important;
+}
+
+.panel-box {
+  box-sizing: border-box;
+  border-radius: 4px;
+  background: #fff;
+  border: 1px solid #ebebeb;
+  transition: .2s;
+}
+
+.panel-box:hover{
+  box-shadow: 0 0 8px 0 rgba(232, 237, 250, .6),
+  0 2px 4px 0 rgba(232, 237, 250, .5);
+}
+
+.panel-header {
+  padding: 15px;
+  border-bottom: 1px solid #ebebeb;
+}
+
+.panel-body {
+  padding: 15px;
+}
+
+/* components / ParameterUnit 组件必选样式 */
+.el-form-item.is-required:not(.is-no-asterisk) .title-label:before {
+  content: '*';
+  color: #f56c6c;
+  margin-right: 4px;
+}
+
+/* 表格图标按钮样式 */
+.table-action-btn{
+  position: relative;
+  top: 0 !important;
+  color: #409eff;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 400;
+}
+.table-action-btn+.table-action-btn{
+  margin-left: 6px;
+}
+.table-action-btn:hover{
+  opacity: 0.9;
+}
+.table-action-btn:active {
+  top: 1px !important;
+}
+.table-action-btn[disabled] {
+  opacity: 0.4;
+  top: 0 !important;
+}
+
+/* codemirror 图标*/
+.action-icon {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 20px !important;
+  height: 20px !important;
+  color: #606266;
+  cursor: pointer;
+  z-index: 2;
+  opacity: 0.75;
+}
+
+/* elementUI加载中居中 */
+.el-loading-spinner {
+  margin-top: 0;
+  transform: translateY(-50%);
+}
+
+.tip-btn.disabled,
+.tip-btn.disabled:focus,
+.tip-btn.disabled:hover {
+  opacity: 0.25;
+  filter: opacity(alpha(25));
+  cursor: not-allowed;
+}
+
+.tip-pop {
+  padding: 8px 10px;
+  font-size: 12px;
+  min-width: auto;
+}
+
+/* 弹窗样式 */
+.common-dialog .el-dialog__body {
+  padding: 16px 22px;
+}
+
+.common-footer {
+  clear: both;
+  padding: 10px 0 10px;
+  text-align: right;
+  box-sizing: border-box;
+}
+
+.is-fullscreen.common-dialog{
+  border-radius: 0;
+}
+
+/* 超出省略号 */
+.over-ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 进度条 */
+.inner-text-progress .el-progress-bar{
+  padding-right: 0;
+  margin-right: 0;
+}
+.inner-text-progress .el-progress__text {
+  display: block;
+}
+.inner-text-progress .inner-text {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  line-height: 18px;
+  text-align: center;
+  font-size: 12px;
+  color: #fff;
+  font-weight: bolder;
+}
+
+/* elementUI自带滚动条样式调整 */
+.scrollbar-adjust-x {
+  overflow-x: auto;
+}
+.scrollbar-adjust-y {
+  overflow-y: auto;
+}
+.over-auto {
+  overflow: auto;
+}
+/* 自定义验证 */
+.is-necessary::before {
+  content: '*';
+  color: #f56c6c;
+  margin-right: 4px;
+}
+.form-error-output {
+  color: #f56c6c;
+  font-size: 12px;
+  line-height: 1;
+  padding-top: 4px;
+  transition: all ease 0.4s;
+}
+.valid-error .el-input__inner,
+.valid-error .el-textarea__inner{
+  border-color: #f56c6c;
+}
+.valid-ok .el-input__inner,
+.valid-ok .el-textarea__inner{
+  border-color: #67c23a;
+}
+
+/* 流程图删除图标 */
+.fc-delete-icon {
+  font-size: 14px;
+  color: #8b0000;
+  cursor: pointer;
+}
+.fc-delete-icon:hover {
+  color: #f56c6c;
+}
+
+.jtk-drag-select * {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* 动画样式 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity .4s;
+}
+
+.fade-enter,
+.fade-leave-to
+/* .fade-leave-active below version 2.1.8 */
+{
+  opacity: 0;
+}
+
+.drill-out-enter-active,
+.drill-out-leave-active,
+.drill-out-quick-enter-active,
+.drill-out-quick-leave-active {
+  transform: translateY(0);
+  transition: all .4s;
+}
+
+.drill-out-enter,
+.drill-out-leave-to,
+.drill-out-quick-enter,
+.drill-out-quick-leave-to {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
+.drill-out-quick-enter-active,
+.drill-out-quick-leave-active {
+  transition: all .2s;
+}
+
+.slide-fade-enter-active,
+.slide-fade-leave-active {
+  transition: all 0.4s ease;
+}
+.slide-fade-enter,
+.slide-fade-leave-to{
+  transform: translateY(-10px);
+  transform-origin: top;
+  opacity: 0;
+  height: 0;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}/* 这是针对缺省样式 (必须的) */
+::-webkit-scrollbar-thumb {
+  background-color: rgba(144, 146, 152, 0.3);
+  border-radius: 4px;
+  -webkit-border-radius: 4px;
+  transition: background-color .3s;
+}/* 滑块颜色 */
+/*鼠标点击滚动条显示样式*/
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(144, 146, 152, 0.5);
+}
+::-webkit-scrollbar-thumb:active {
+  background-color:  rgba(144, 146, 152, 0.7);
+}
+::-webkit-scrollbar-corner {
+  display: none;
+}/* 横向滚动条和纵向滚动条相交处尖角的颜色 */
+
+.no-touch {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}

@@ -2,21 +2,37 @@
 
 module.exports = {
   pages: {
-    index: {
-      entry: './src/views/index/main.js',
-      template: './public/index.html',
-      filename: 'index.html',
+    codeshow: {
+      entry: './src/views/codeshow/main.js',
+      template: './public/codeshow.html',
+      filename: 'codeshow.html',
       favicon: './public/favicon.ico',
-      title: '主页',
-      chunks: ['manifest', 'vendor', 'index']
+      title: '代码编辑器',
+      chunks: ['manifest', 'vendor', 'codeshow']
     },
-    admin: {
-      entry: './src/views/admin/main.js',
-      template: './public/admin.html',
-      filename: 'admin.html',
+    datashow: {
+      entry: './src/views/datashow/main.js',
+      template: './public/datashow.html',
+      filename: 'datashow.html',
       favicon: './public/favicon.ico',
-      title: '后台管理',
-      chunks: ['manifest', 'vendor', 'admin']
+      title: '数据列表',
+      chunks: ['manifest', 'vendor', 'datashow']
+    },
+    flowshow: {
+      entry: './src/views/flowshow/main.js',
+      template: './public/flowshow.html',
+      filename: 'flowshow.html',
+      favicon: './public/favicon.ico',
+      title: '模型创建',
+      chunks: ['manifest', 'vendor', 'flowshow']
+    },
+    chartshow: {
+      entry: './src/views/chartshow/main.js',
+      template: './public/chartshow.html',
+      filename: 'chartshow.html',
+      favicon: './public/favicon.ico',
+      title: '图表展示',
+      chunks: ['manifest', 'vendor', 'chartshow']
     }
   }
 }
