@@ -3,9 +3,6 @@
 // see http://vuejs-templates.github.io/webpack for documentation.
 
 const path = require('path')
-const rewrites = require('./rewrites') // 使用vue-router 的history模式时，开发环境时需要配置
-
-const assetsPublicPath = '/'
 
 module.exports = {
   dev: {
@@ -16,14 +13,7 @@ module.exports = {
     proxyTable: {},
 
     // Various Dev Server settings
-    historyApiFallback: {
-      rewrites: rewrites.map(function (item) {
-        return {
-          from: item.from,
-          to: path.posix.join(assetsPublicPath, item.to)
-        }
-      })
-    },
+    historyApiFallback: true,
     host: 'localhost', // can be overwritten by process.env.HOST
     port: 8080, // can be overwritten by process.env.PORT, if port is in use, a free one will be determined
     autoOpenBrowser: false,
