@@ -25,10 +25,17 @@ export default {
   }
 }
 </script>
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .code-mirror-wrapper{
   position: relative;
   height: 100%;
+  /deep/
+  .vue-codemirror{
+    height: 100%;
+    .CodeMirror-wrap{
+      height: 100%;
+    }
+  }
   /deep/
   .CodeMirror-placeholder{
     color: #999;

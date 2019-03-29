@@ -4,9 +4,14 @@ import Vue from 'vue'
 import 'normalize.css'
 import '@/assets/style/common.css'
 import '@/assets/icons'
+import VueClipboard from 'vue-clipboard2'
 import App from './App'
 
 Vue.config.productionTip = false
+
+VueClipboard.config.autoSetContainer = true
+
+Vue.use(VueClipboard)
 
 /* eslint-disable no-new */
 new Vue({

@@ -1,9 +1,8 @@
-/* eslint-disable */
 import { setOuts } from './index'
 import store from '../store'
 
 export default function (state, activeNode) {
-   /* 根据不同code，节点属性不同 */
+  /* 根据不同code，节点属性不同 */
   switch (activeNode.nodeCode) {
     case 'MODEL':
       // 模型节点(战法)
@@ -64,7 +63,7 @@ export default function (state, activeNode) {
           xAxis: {
             rotate: 0,
             name: '',
-            dataCol: {},
+            dataCol: {}
           },
           yAxis: {
             name: ''
