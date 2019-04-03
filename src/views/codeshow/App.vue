@@ -30,8 +30,6 @@ import 'codemirror/addon/fold/comment-fold.js'
 // 行注释
 import 'codemirror/addon/comment/comment.js'
 import 'codemirror/addon/comment/continuecomment.js'
-
-import CodeMirror from '@/components/CodeMirror'
 import FooterMenu from '@/components/FooterMenu'
 import {isJSON} from '@/utils/type'
 
@@ -39,7 +37,7 @@ export default {
   name: 'App',
   components: {
     FooterMenu,
-    CodeMirror
+    CodeMirror: () => import(/* webpackChunkName: 'code-mirror' */ '@/components/CodeMirror')
   },
   data () {
     return {

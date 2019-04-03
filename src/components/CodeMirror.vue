@@ -5,9 +5,9 @@
   </div>
 </template>
 <script>
-import { codemirror } from 'vue-codemirror'
 import 'codemirror/lib/codemirror.css'
 import 'codemirror/addon/display/placeholder.js'
+import { codemirror } from 'vue-codemirror'
 
 export default {
   name: 'CodeMirror',

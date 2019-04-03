@@ -4,11 +4,12 @@
       <h4 class="title fs20">建模组件</h4>
       <el-input class="filter-input" placeholder="请输入关键字" v-model="model" clearable></el-input>
     </div>
-    <div class="comp-tree" @mousedown.stop.prevent="bindEvent">
+    <div class="comp-tree" ref="comptree" @mousedown.stop.prevent="bindEvent">
       <unit-tree :tree="computedTree" focusable/>
       <div class="tree-empty" v-if="isEmpty || errMsg">{{ errMsg || '暂无数据' }}</div>
     </div>
     <!-- 可变拖动块 -->
+    <transition name="fade">
     <div
       class="tree-node-content dragable-item"
       :class="{'dragable-item-origin-pos': !isVisible}"
@@ -21,20 +22,23 @@
       />
       <span :title="currentItem.label" class="tree-node-text">{{currentItem.label}}</span>
     </div>
+    </transition>
   </div>
 </template>
 <script>
-import $ from 'jquery'
-import uuid from 'uuid'
+import { isArray } from '@/utils/type'
+import modelTreeMixin from '@/utils/modelLib'
 import UnitTree from '@/components/UnitTree'
+import { createNamespacedHelpers } from 'vuex'
 
-import { mapState, mapGetters, mapMutations } from 'vuex'
+const { mapState, mapGetters, mapMutations } = createNamespacedHelpers('vmp')
 
 export default {
   name: 'ComponentLib',
   components: {
     UnitTree
   },
+  mixins: [modelTreeMixin],
   data () {
     return {
       statusArr: ['hide', 'dragable'],
@@ -66,25 +70,21 @@ export default {
   },
   created () {
     // 初始化菜单状态
-    this.statusArr.forEach(v => {
-      this.setTreeNodeProp(this.components, v, false)
-    })
+    this.formatTree(this.components)
     // 使二级菜单可拖拽
     this.dragable(this.components, 2)
   },
-  mounted () {},
   methods: {
     ...mapMutations(['genNodeOfCode', 'setEditFlagTrue']),
-    bindEvent ($event) {
+    bindEvent (event) {
       // 事件委托在最外层
-      const target = $($event.target)
-      const tmpIdx = target.data('idx')
-      const idx = tmpIdx != null ? tmpIdx : target.parent().data('idx')
+      const target = event.target
+      const idx = this.getDataIdx(target)
       if (idx == null) return
       const idxArr = String(idx).split('_')
       const item = this.getCurItem(this.components, idxArr)
       // 切换展开状态
-      $.isArray(item.children) && (item.expanded = !item.expanded)
+      isArray(item.children) && (item.expanded = !item.expanded)
       // 初始化所有节点状态
       this.setTreeNodeProp(this.components, 'current', false)
       // 改变当前行状态
@@ -92,85 +92,8 @@ export default {
       // 判断是否可拖拽
       if (item.dragable) {
         // 模拟拖拽效果
-        this.copyDrag(item, $event)
+        this.copyDrag(item, event)
       }
-    },
-    /* 复制并拖动 */
-    copyDrag (item, ev) {
-      const containerDom = $(this.$refs.container)
-      const curItemDom = $(this.$refs.dragableItem)
-      const targetDiv = this.getCurDiv($(ev.target))
-      const mouseX = ev.clientX - containerDom.offset().left // 鼠标离容器左侧距离
-      const mouseY = ev.clientY - containerDom.offset().top // 鼠标离容器上侧距离
-      const disX = targetDiv.position().left // 目标div离容器左侧距离
-      const disY = targetDiv.position().top // 目标div离容器上侧距离
-      const detaXY = {
-        X: mouseX - disX,
-        Y: mouseY - disY
-      } // 鼠标离目标div左侧和上侧的距离
-      // 可移动项目出现在适当位置
-      item.visible = true
-      Object.keys(item).forEach(v => {
-        this.setTreeNodeProp(this.currentItem, v, item[v])
-      })
-      curItemDom
-        .css({
-          left: `${disX}px`,
-          top: `${disY}px`,
-          width: `calc(100% - ${disX}px)`,
-          opacity: 0
-        })
-        .animate({ opacity: 1 }, 500)
-      // 拖拽效果
-      this.bindDragEvent(curItemDom, detaXY)
-    },
-    /* 实现拖拽效果 */
-    bindDragEvent (curItemDom, detaXY) {
-      const containerDom = $(this.$refs.container)
-      const item = this.currentItem
-      const boardArea = this.boardArea
-      const boardZoom = this.boardZoom
-      const activeModelType = this.activeModel.type
-      const dropable = this.judgeDropable
-      const updateNode = this.updateNode
-      $(document)
-        .on('mousemove', ev => {
-          const mouseX = ev.clientX - containerDom.offset().left // 鼠标离容器左侧距离
-          const mouseY = ev.clientY - containerDom.offset().top // 鼠标离容器上侧距离
-          curItemDom.css({
-            left: mouseX - detaXY.X,
-            top: mouseY - detaXY.Y
-          })
-        })
-        .on('mouseup', event => {
-          item.visible = false
-          if (!boardArea) return
-          // 鼠标相对设计板的位置
-          const mousePos = {
-            x: event.clientX - boardArea.left,
-            y: event.clientY - boardArea.top
-          }
-          // 拖拽的组件处于设计板，则放入数组，并设置成当前节点
-          if (
-            mousePos.x > 0 &&
-            mousePos.x <= boardArea.w &&
-            mousePos.y > 0 &&
-            mousePos.y <= boardArea.h &&
-            dropable(activeModelType, item)
-          ) {
-            // 滚动条滚动的需加上，需按缩放比例显示
-            item.position = {
-              x: (mousePos.x + boardArea.scrollLeft) / boardZoom,
-              y: (mousePos.y + boardArea.scrollTop) / boardZoom
-            }
-            updateNode(item)
-            this.setEditFlagTrue()
-          }
-          // 解绑事件
-          $(document)
-            .off('mouseup')
-            .off('mousemove')
-        })
     },
     updateNode (item) {
       // 根据code生成不同节点信息，更新当前节点信息
@@ -183,12 +106,8 @@ export default {
         isOut: this.judgeIsOut(item)
       })
     },
-    /* 生成节点uuid */
-    generateUUID () {
-      return uuid.v1()
-    },
     /* 是否可放置 */
-    judgeDropable (modelType, item) {
+    judgeDropable (item, modelType) {
       let flag = false
       if (modelType === 'MODEL') {
         flag = !this.judgeIsML(item)
@@ -258,31 +177,13 @@ export default {
     judgeFn (codeArr, item) {
       return !!codeArr.filter(code => item.code.includes(code)).length
     },
-    /* 获取当前点击项目div */
-    getCurDiv (target) {
-      return target.hasClass('tree-node-content')
-        ? target
-        : this.getCurDiv(target.parent())
-    },
-    /* 使某级树节点可拖动 */
-    dragable (tree, level) {
-      if ($.isArray(tree)) {
-        let item
-        for (let i = 0, len = tree.length; i < len; i++) {
-          item = tree[i]
-          item.dragable = level === 1
-          if (level > 1) this.dragable(item.children, level - 1)
-          else continue
-        }
-      }
-    },
     /* 筛选 */
     filterTree (tree, model) {
       let nodata = true
       tree.forEach(item => {
         // item.expanded = true
         item.hide = true
-        if ($.isArray(item.children)) {
+        if (isArray(item.children)) {
           item.children.forEach(v => {
             v.hide = !v.label.includes(model)
             // 若子有不为hide, 则父不为hide
@@ -294,22 +195,6 @@ export default {
       })
       this.errMsg = nodata ? '没有符合条件的数据' : ''
       return tree
-    },
-    /* 设置某个属性值 */
-    setTreeNodeProp (target, prop, val) {
-      // 判断是单个节点还是多个节点
-      if ($.isPlainObject(target)) {
-        // 如果已经存在该属性的值，说明已经设过
-        target.hasOwnProperty(prop)
-          ? (target[prop] = val)
-          : this.$set(target, prop, val)
-      } else if ($.isArray(target)) {
-        target.forEach(item => {
-          this.setTreeNodeProp(item, prop, val)
-          $.isArray(item.children) &&
-            this.setTreeNodeProp(item.children, prop, val)
-        })
-      }
     },
     /* 获取当前点击的项 */
     getCurItem (tree, idxArr) {

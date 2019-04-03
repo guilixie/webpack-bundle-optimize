@@ -1,5 +1,5 @@
 <template>
-  <div class="flowchart" :id="containerId">
+  <div class="flowchart" :ref="containerRef">
     <div
       class="node"
       v-for="node in nodes"
@@ -23,7 +23,7 @@
   </div>
 </template>
 <script>
-import $ from 'jquery'
+import { css, position } from '@/utils/dom'
 import uuid from 'uuid'
 import jsplumb from 'jsplumb'
 import { Message } from 'element-ui'
@@ -42,7 +42,7 @@ export default {
   },
   data () {
     return {
-      containerId: `jFlowchart_${uuid.v1()}`, // 容器id
+      containerRef: `jFlowchart_${uuid.v1()}`, // 容器id
       jsplumbInstance: null, // jsplumb实例
       defaultOption: {
         Connector: [
@@ -70,7 +70,7 @@ export default {
         EndpointHoverStyle: {
           fill: '#7073EB'
         },
-        Container: 'containerId'
+        Container: null
       }, // 默认配置
       sEndpoint: {
         paintStyle: { radius: 3, fill: '#D4FFD6' }, // 设置连接点的颜色
@@ -189,7 +189,7 @@ export default {
       this.jpConnectionsPack = {}
       this.$nextTick(() => {
         // 切换模型时去除缩放动画
-        this.clearZoomAnimation($(this.jsplumbInstance.getContainer()))
+        this.clearZoomAnimation(this.jsplumbInstance.getContainer())
         // 删除残留连线和端点
         this.resetFlowchart()
         // 回填恢复所有连接
@@ -226,6 +226,7 @@ export default {
   mounted () {
     jsPlumb.ready(() => {
       // 获取jsPlumb实例，设置默认配置
+      this.defaultOption.Container = this.$refs[this.containerRef]
       this.jsplumbInstance = this.getInstance(this.defaultOption)
       // 绑定连接时事件
       this.jsplumbInstance.bind('connection', this.bindConnection)
@@ -273,37 +274,49 @@ export default {
     bindNodeEvt (ev) {
       /**
        * 1.首先要保存节点位置信息
-       * 2. 选中当前节点
+       * 2.选中当前节点
        */
-      const node = $(ev.currentTarget)
-      const conDom = $(`#${this.containerId}`)
-      const conPos = { x: conDom.offset().left, y: conDom.offset().top }
-      const nodePos = node.position()
-      const nodeId = node.attr('id')
-      const mousePos = { x: ev.clientX - conPos.x, y: ev.clientY - conPos.y }
-      let positionX = nodePos.left
-      let positionY = nodePos.top
-      const detaPos = { x: mousePos.x - positionX, y: mousePos.y - positionY }
-      $(document)
-        .on('mousemove', ev => {
-          positionX = ev.clientX - conPos.x - detaPos.x
-          positionY = ev.clientY - conPos.y - detaPos.y
+      const node = ev.currentTarget
+      const nodePos = position(node)
+      const nodeId = node.getAttribute('id')
+      const mouseStartPos = { x: ev.clientX, y: ev.clientY }
+      let mouseMvPos
+      const mouseMvFn = ev => {
+        mouseMvPos = {
+          x: ev.clientX,
+          y: ev.clientY
+        }
+      }
+      const mouseUpFn = ev => {
+        let positionX = nodePos.left
+        let positionY = nodePos.top
+
+        if (mouseMvPos) {
+          // 计算node当前位置
+          positionX += (mouseMvPos.x - mouseStartPos.x) / this.boardZoom
+          positionY += (mouseMvPos.y - mouseStartPos.y) / this.boardZoom
+        }
+
+        // 更新node信息，涉及的地方都改变
+        this.updateNodesPack({
+          isSetActive: true,
+          node: {
+            nodeId,
+            positionX: positionX < 0 ? 0 : positionX,
+            positionY: positionY < 0 ? 0 : positionY
+          }
         })
-        .on('mouseup', ev => {
-          // 更新node信息，涉及的地方都改变
-          this.updateNodesPack({
-            isSetActive: true,
-            node: {
-              nodeId,
-              positionX: positionX <= 0 ? 0 : positionX / this.boardZoom,
-              positionY: positionY <= 0 ? 0 : positionY / this.boardZoom
-            }
-          })
-          this.setEditFlagTrue()
-          $(document)
-            .off('mousemove')
-            .off('mouseup')
-        })
+
+        // 已修改
+        this.setEditFlagTrue()
+
+        // 解绑事件
+        document.removeEventListener('mouseup', mouseUpFn)
+        document.removeEventListener('mousemove', mouseMvFn)
+      }
+      // 事件绑定
+      document.addEventListener('mousemove', mouseMvFn)
+      document.addEventListener('mouseup', mouseUpFn)
     },
     // 连线事件被触发时，前端保存连线信息
     bindConnection (info) {
@@ -401,7 +414,7 @@ export default {
     },
     // 初始化相应节点
     initNodes (nodes) {
-      this.draggableNodes(nodes.map(item => $(`#${item.nodeId}`)))
+      this.draggableNodes(nodes.map(item => document.getElementById(item.nodeId)))
       this.addAllEndPoints(nodes)
     },
     // 连接的鼠标事件
@@ -445,14 +458,13 @@ export default {
           let id = item.nodeId
           this.endpointPack[id] = [] // 当前节点的端点存放数组初始化
           Object.keys(this.anchorsMap).forEach(key => {
-            this.anchorsCodeMap[key].includes(code) &&
-              this.anchorsMap[key].forEach(config => {
-                let opt = Object.assign({}, this[config.type], {
-                  anchor: config.anchor
-                })
-                let ep = this.addEndPoint(id, opt) // 添加端点
-                this.saveEndpoints(ep) // 存放端点
+            this.anchorsCodeMap[key].includes(code) && this.anchorsMap[key].forEach(config => {
+              let opt = Object.assign({}, this[config.type], {
+                anchor: config.anchor
               })
+              let ep = this.addEndPoint(id, opt) // 添加端点
+              this.saveEndpoints(ep) // 存放端点
+            })
           })
         })
       })
@@ -491,10 +503,9 @@ export default {
           }
         })
         let endpoints = this.endpointPack[node.nodeId]
-        endpoints &&
-          endpoints.forEach(ep => {
-            this.jsplumbInstance.deleteEndpoint(ep) // 删除节点和关联的连接
-          })
+        endpoints && endpoints.forEach(ep => {
+          this.jsplumbInstance.deleteEndpoint(ep) // 删除节点和关联的连接
+        })
         endpoints = [] // 删除保存的端点
       })
     },
@@ -509,26 +520,25 @@ export default {
       })
     },
     // 去除缩放动画
-    clearZoomAnimation (jqEl) {
-      jqEl.css({ transition: 'none', '-webkit-transition': 'none' })
+    clearZoomAnimation (el) {
+      css(el, { transition: 'none', '-webkit-transition': 'none' })
     },
     // 设置缩放
     setZoom (zoom, instance, transformOrigin, el) {
       transformOrigin = transformOrigin || [0.5, 0.5]
       instance = instance || jsPlumb
       el = el || instance.getContainer()
-      const jqEl = $(el)
       const prefix = ['webkit', 'moz', 'ms', 'o']
       const scale = `scale(${zoom})`
       const oStr = `${transformOrigin[0] * 100}% ${transformOrigin[1] * 100}%`
-      jqEl.css({
+      css(el, {
         transform: scale,
         'transform-origin': oStr,
         transition: 'transform 0.5s ease, -webkit-transform 0.5s ease',
         '-webkit-transition': '-webkit-transform 0.5s ease'
       })
       for (let i = 0; i < prefix.length; i++) {
-        jqEl.css({
+        css(el, {
           [`-${prefix[i]}-transform`]: scale,
           [`-${prefix[i]}-transform-origin`]: oStr
         })

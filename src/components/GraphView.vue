@@ -29,22 +29,21 @@
 </template>
 
 <script>
-/* eslint-disable */
 import ECharts from 'vue-echarts/components/ECharts'
 import 'echarts-wordcloud'
-import 'echarts/map/js/china'
-import china from 'echarts/map/json/china' // 全部省份及其省会坐标
-import cities from 'echarts/map/json/china-cities'  // 主要城市及其坐标
+// import 'echarts/map/js/china'
+// import china from 'echarts/map/json/china' // 全部省份及其省会坐标
+// import cities from 'echarts/map/json/china-cities' // 主要城市及其坐标
 import defaultChartList from '@/utils/charts.js'
-import ChartsSelector from '@/components/ChartsSelector'
+// import ChartsSelector from '@/components/ChartsSelector'
 
 export default {
-  name: "graphView",
+  name: 'GraphView',
   props: {
     initData: Array,
     initIndex: [Number, String],
     initOptions: Object,
-    initVisible : { // chartSelector是否显示的默认参数
+    initVisible: { // chartSelector是否显示的默认参数
       type: Boolean,
       default: false
     },
@@ -52,83 +51,92 @@ export default {
       type: Boolean,
       default: false
     },
-    loadingColor: 'rgba(240, 240, 240, 0.8)',
+    loadingColor: 'rgba(240, 240, 240, 0.8)'
   },
   components: {
-    ChartsSelector,
-    defaultChartList,
+    ChartsSelector: () => import(/*  webpackChunkName: 'charts-selector' */ '@/components/ChartsSelector'),
     'v-echarts': ECharts
   },
-  data() {
+  data () {
     return {
-      chartId: "graphView" + this.initIndex,
+      chartId: 'graphView' + this.initIndex,
       renderMode: {
-        renderer: "canvas" // 可切换svg
+        renderer: 'canvas' // 可切换svg
       },
       options: {},
       citiesData: {},
       tableCol: [], //  数据展示为table时的table column
       tableData: [],
-      value: '',  // el-select必需的变量
-      progressMsg: '',    // 进展信息
+      value: '', // el-select必需的变量
+      progressMsg: '', // 进展信息
       xAxisData: [],
       yAxisDataObj: {},
-      seriesColName: [],  // 序列对应的字段名
+      seriesColName: [], // 序列对应的字段名
       chartList: [],
       chartSelectorVisible: false,
       chartMenuVisible: false,
       chartMenuPosition: {
         top: '12px',
         zIndex: 1
-      },
+      }
     }
   },
-  created() {
+  created () {
     this.progressMsg = ''
     this.chartList = defaultChartList
   },
-  mounted() {
+  mounted () {
     console.log('--mounted--')
+
     if (this.defaultOptions.series.length === 0) {
       this.progressMsg = '没有配置序列（series）'
       return
     }
-    this.buildCitiesPositinData(cities, china)
 
-    // GraphView渲染的时候initData可能还没请求到
-    if (this.initData && this.initData.length > 0) {
-      this.initialize()
-    }
+    Promise.all([
+      import(/*  webpackChunkName: 'china-map' */ 'echarts/map/json/china'),
+      import(/*  webpackChunkName: 'china-cities-json' */ 'echarts/map/json/china-cities'),
+      import(/*  webpackChunkName: 'china-map' */ 'echarts/map/js/china')
+    ]).then(([china, cities]) => {
+      this.buildCitiesPositinData(cities, china)
+
+      // GraphView渲染的时候initData可能还没请求到
+      if (this.initData && this.initData.length > 0) {
+        this.initialize()
+      }
+    }).catch(error => {
+      console.log('Error occurred, when import china-map-json and china-cities-json:\n ' + error)
+    })
   },
   computed: {
-    defaultOptions() {
+    defaultOptions () {
       return this.initOptions && this.initOptions.charts
     },
-    initDataUpdate: function() {
+    initDataUpdate: function () {
       return this.initData
     }
   },
   watch: {
-    initDataUpdate: function() {
+    initDataUpdate: function () {
       if (this.defaultOptions.series.length > 0) {
         this.initialize()
       }
     }
   },
   methods: {
-    initialize(){
+    initialize () {
       this.progressMsg = ''
       this.formatInitData()
       this.showChart(this.defaultOptions.type)
       this.chartSelectorVisible = this.initVisible
     },
-    changeChartType(val){
+    changeChartType (val) {
       this.defaultOptions.type = val
       this.showChart(val)
     },
-    showChart(type) {
+    showChart (type) {
       this.progressMsg = ''
-      switch(type) {
+      switch (type) {
         case 'table':
           this.getTableChart()
           break
@@ -185,29 +193,29 @@ export default {
           this.progressMsg = type + '暂时不在支持类型列表'
       }
     },
-    updateChartsMenu({position, visible, current}) {
+    updateChartsMenu ({position, visible, current}) {
       if (position !== undefined) {
-        console.log("---position---" ,position)
+        console.log('---position---', position)
       } else if (visible !== undefined) {
         this.chartMenuVisible = visible
       } else if (current !== undefined) {
         this.changeChartType(current)
       }
     },
-    getValueFromUnknown(str) {
-      return str ? str : "";
+    getValueFromUnknown (str) {
+      return str || ''
     },
-    doMatrixTransposition(array) {
+    doMatrixTransposition (array) {
       // 矩阵转置
       let dstData = []
       if (array[0] instanceof Array) {
         const length = array[0].length
-        for (let i=0; i<length; i++) {
+        for (let i = 0; i < length; i++) {
           dstData.push([])
         }
 
-        for (let i=0; i<array.length; i++) {
-          for (let j=0; j<array[i].length; j++) {
+        for (let i = 0; i < array.length; i++) {
+          for (let j = 0; j < array[i].length; j++) {
             dstData[j][i] = array[i][j]
           }
         }
@@ -219,7 +227,7 @@ export default {
 
       return dstData
     },
-    buildCitiesPositinData(cities,china) {
+    buildCitiesPositinData (cities, china) {
       // 构建全国主要城市省份与其坐标对应的对象
       cities.features.forEach(city => {
         this.citiesData[city.properties.name] = city.properties.cp
@@ -228,7 +236,7 @@ export default {
         this.citiesData[province.properties.name] = province.properties.cp
       })
     },
-    formatInitData() {
+    formatInitData () {
       // 数据库查出来的数据字段依然是ename
       // 此处统一以前端页面配置的别名来进行替换，方便后续图例等组件的显示
       let aliasMap = {}
@@ -265,54 +273,54 @@ export default {
         })
       })
     },
-    buildBaseOptions(axis = false) {
+    buildBaseOptions (axis = false) {
       let baseOptions = {
         color: [
-          "#19d4ae",
-          "#5ab1ef",
-          "#fa6e86",
-          "#ffb980",
-          "#0067a6",
-          "#c4b4e4",
-          "#d87a80",
-          "#9cbbff",
-          "#d9d0c7",
-          "#87a997",
-          "#d49ea2",
-          "#5b4947",
-          "#7ba3a8"
+          '#19d4ae',
+          '#5ab1ef',
+          '#fa6e86',
+          '#ffb980',
+          '#0067a6',
+          '#c4b4e4',
+          '#d87a80',
+          '#9cbbff',
+          '#d9d0c7',
+          '#87a997',
+          '#d49ea2',
+          '#5b4947',
+          '#7ba3a8'
         ], // 全局颜色盘
         title: {
-          x: "25%",
+          x: '25%',
           text: this.getValueFromUnknown(this.defaultOptions.title.text),
           textStyle: {
-            color: "#333",
-            fontStyle: "normal",
-            fontWeight: "bolder",
-            fontFamily: "sans-serif",
+            color: '#333',
+            fontStyle: 'normal',
+            fontWeight: 'bolder',
+            fontFamily: 'sans-serif',
             fontSize: 18
           },
           subtext: this.getValueFromUnknown(this.defaultOptions.title.subtext),
           subtextStyle: {
-            color: "#aaa",
-            fontStyle: "normal",
-            fontWeight: "normal",
-            fontFamily: "sans-serif",
+            color: '#aaa',
+            fontStyle: 'normal',
+            fontWeight: 'normal',
+            fontFamily: 'sans-serif',
             fontSize: 12
           }
         },
         legend: {
           show: this.defaultOptions.legend.show,
           z: 10,
-          orient: "vertical",
-          left: "0%",
+          orient: 'vertical',
+          left: '0%',
           textStyle: {
-            color: "#333",
-            fontStyle: "normal",
-            fontWeight: "normal",
-            fontFamily: "sans-serif",
+            color: '#333',
+            fontStyle: 'normal',
+            fontWeight: 'normal',
+            fontFamily: 'sans-serif',
             fontSize: 12
-          },
+          }
           // data: this.defaultOptions.legend.data  // 会影响部分图的图例显示
         },
         toolbox: {
@@ -327,8 +335,8 @@ export default {
           }
         },
         grid: {
-          top: "15%",
-          bottom: "10%",
+          top: '15%',
+          bottom: '10%',
           containLabel: true
         }
       }
@@ -336,13 +344,13 @@ export default {
       //  没有类目坐标轴的不需要dataZoom组件
       if (axis) {
         baseOptions.dataZoom = [{
-          type: "slider",
+          type: 'slider',
           show: true,
           xAxisIndex: [0],
           start: 0,
           end: this.defaultOptions.dataZoomEnd
-        },{
-          type: "slider",
+        }, {
+          type: 'slider',
           show: true,
           yAxisIndex: [0],
           start: 0,
@@ -352,10 +360,10 @@ export default {
 
       return baseOptions
     },
-    buildXAxisAttr(gapVal = false) {
+    buildXAxisAttr (gapVal = false) {
       return {
         name: this.getValueFromUnknown(this.defaultOptions.xAxis.name),
-        type: "category",
+        type: 'category',
         boundaryGap: gapVal,
         axisLabel: {
           rotate: this.defaultOptions.xAxis.rotate,
@@ -366,21 +374,21 @@ export default {
           interval: 0
         },
         data: this.xAxisData
-      };
+      }
     },
-    buildYAxisAttr() {
+    buildYAxisAttr () {
       return {
         name: this.getValueFromUnknown(this.defaultOptions.yAxis.name),
-        type: "value"
-      };
+        type: 'value'
+      }
     },
-    buildTooltipAttr(val) {
+    buildTooltipAttr (val) {
       return {
         show: this.defaultOptions.tooltip.show,
         trigger: val // 无类目轴的建议使用item，有类目轴的建议使用axis
-      };
+      }
     },
-    buildMarkLine(singleSerie) {
+    buildMarkLine (singleSerie) {
       let data = []
       if (singleSerie.average === true) {
         data.push({
@@ -394,7 +402,7 @@ export default {
       }
       return {'data': data}
     },
-    buildMarkPoint(singleSerie) {
+    buildMarkPoint (singleSerie) {
       let data = []
       let ret = {}
       if (singleSerie.max === true || singleSerie.min === true) {
@@ -431,7 +439,7 @@ export default {
 
       return ret
     },
-    getDefaultSerieData() {
+    getDefaultSerieData () {
       // 默认只获取第1个序列的数据
       const xAxisEname = this.defaultOptions.xAxis.dataCol.ename
       const serieEname = this.defaultOptions.series[0].dataCol.ename
@@ -443,8 +451,8 @@ export default {
       return defaultData
     },
     // line
-    buildLineSeries(isLineArea) {
-      let serieArray = [];
+    buildLineSeries (isLineArea) {
+      let serieArray = []
       this.defaultOptions.series.forEach(singleSerie => {
         let serieObj = {
           name: singleSerie.cname,
@@ -461,30 +469,30 @@ export default {
         }
         serieArray.push(serieObj)
       })
-      return serieArray;
+      return serieArray
     },
-    getLineChart(isLineArea = false) {
+    getLineChart (isLineArea = false) {
       // 生成折线图
       let option
       if (isLineArea) {
         // 堆叠图使用zoom会使图形变得不好理解
-        option = this.buildBaseOptions(false);
+        option = this.buildBaseOptions(false)
       } else {
-        option = this.buildBaseOptions(true);
+        option = this.buildBaseOptions(true)
       }
-      option.xAxis = this.buildXAxisAttr();
-      option.yAxis = this.buildYAxisAttr();
-      option.tooltip = this.buildTooltipAttr("axis");
-      option.series = this.buildLineSeries(isLineArea);
+      option.xAxis = this.buildXAxisAttr()
+      option.yAxis = this.buildYAxisAttr()
+      option.tooltip = this.buildTooltipAttr('axis')
+      option.series = this.buildLineSeries(isLineArea)
 
-      return option;
+      return option
     },
-    getLineAreaChart() {
-      return this.getLineChart(true);
+    getLineAreaChart () {
+      return this.getLineChart(true)
     },
     // bar
-    buildBarSeries(type) {
-      let serieArray = [];
+    buildBarSeries (type) {
+      let serieArray = []
       this.defaultOptions.series.forEach(singleSerie => {
         let serieObj = {
           name: singleSerie.cname,
@@ -499,59 +507,59 @@ export default {
         }
         serieArray.push(serieObj)
       })
-      return serieArray;
+      return serieArray
     },
-    getBarChart(type = 'bar') {
+    getBarChart (type = 'bar') {
       let option
       if (type === 'stackbar') {
         // 堆叠图使用zoom会使图形变得不好理解
-        option = this.buildBaseOptions(false);
+        option = this.buildBaseOptions(false)
       } else {
-        option = this.buildBaseOptions(true);
+        option = this.buildBaseOptions(true)
       }
 
       if (type === 'verticalbar') {
-        option.xAxis = this.buildYAxisAttr();
-        option.yAxis = this.buildXAxisAttr(true);
+        option.xAxis = this.buildYAxisAttr()
+        option.yAxis = this.buildXAxisAttr(true)
       } else {
-        option.xAxis = this.buildXAxisAttr(true);
-        option.yAxis = this.buildYAxisAttr();
+        option.xAxis = this.buildXAxisAttr(true)
+        option.yAxis = this.buildYAxisAttr()
       }
 
-      option.tooltip = this.buildTooltipAttr('axis');
-      option.tooltip.axisPointer = { type: 'shadow' };
-      option.series = this.buildBarSeries(type);
+      option.tooltip = this.buildTooltipAttr('axis')
+      option.tooltip.axisPointer = { type: 'shadow' }
+      option.series = this.buildBarSeries(type)
 
-      return option;
+      return option
     },
-    getVerticalBarChart() {
-      return this.getBarChart("verticalbar");
+    getVerticalBarChart () {
+      return this.getBarChart('verticalbar')
     },
-    getStackBarChart() {
-      return this.getBarChart("stackbar");
+    getStackBarChart () {
+      return this.getBarChart('stackbar')
     },
     // pie
-    buildPieData() {
+    buildPieData () {
       // 多个series的话，暂时只处理第一个series
       const nameKey = this.defaultOptions.xAxis.dataCol.ename
       const valueKey = this.defaultOptions.series[0].dataCol.ename
       let data = []
-      this.initData.forEach(childData =>{
+      this.initData.forEach(childData => {
         data.push({
-          "name": childData[nameKey],
-          "value": childData[valueKey]
+          'name': childData[nameKey],
+          'value': childData[valueKey]
         })
       })
 
       return data
     },
-    buildPieSeries(isRose) {
+    buildPieSeries (isRose) {
       let serie = {
         name: this.defaultOptions.series[0].cname,
-        type: "pie",
-        radius: "75%",
-        center: ["50%", "60%"],
-        selectedMode: "single",
+        type: 'pie',
+        radius: '75%',
+        center: ['50%', '60%'],
+        selectedMode: 'single',
         data: this.buildPieData(),
         label: {
           fontSize: 14
@@ -560,34 +568,34 @@ export default {
           itemStyle: {
             shadowBlur: 10,
             shadowOffsetX: 0,
-            shadowColor: "rgba(0, 0, 0, 0.5)"
+            shadowColor: 'rgba(0, 0, 0, 0.5)'
           }
         }
 
-      };
+      }
 
       if (isRose) {
-        serie.radius = ["15%", "75%"];
-        serie.roseType = "area";
+        serie.radius = ['15%', '75%']
+        serie.roseType = 'area'
       }
-      return [serie];
+      return [serie]
     },
-    getPieChart(isRose = false) {
-      let option = this.buildBaseOptions();
-      option.tooltip = this.buildTooltipAttr("item");
-      option.tooltip.formatter = "{a} <br/>{b} : {c} ({d}%)";
-      option.series = this.buildPieSeries(isRose);
+    getPieChart (isRose = false) {
+      let option = this.buildBaseOptions()
+      option.tooltip = this.buildTooltipAttr('item')
+      option.tooltip.formatter = '{a} <br/>{b} : {c} ({d}%)'
+      option.series = this.buildPieSeries(isRose)
 
-      return option;
+      return option
     },
-    getPieNdgrChart() {
-      return this.getPieChart(true);
+    getPieNdgrChart () {
+      return this.getPieChart(true)
     },
     // radar
-    buildRadarAndSeries(option) {
+    buildRadarAndSeries (option) {
       // 几组数据就是几边形
       if (this.seriesColName.length < 3) {
-        console.log("radar对应的series数据少于3组，显示会不正常")
+        console.log('radar对应的series数据少于3组，显示会不正常')
       }
 
       let dataKey = this.xAxisData
@@ -604,13 +612,13 @@ export default {
       const newArray = this.doMatrixTransposition(dataValue)
       newArray.forEach(array => {
         const maximum = Math.max(...array)
-        maxArray.push((parseInt(maximum / 10) + 1) * 10)  // 希望最外层的标度是10的整数倍
+        maxArray.push((parseInt(maximum / 10) + 1) * 10) // 希望最外层的标度是10的整数倍
       })
       maxArray = this.doMatrixTransposition(maxArray)
 
       // 组装indicator雷达指示器属性
       let indicator = []
-      for (let i=0; i<this.seriesColName.length; i++) {
+      for (let i = 0; i < this.seriesColName.length; i++) {
         indicator.push({name: this.seriesColName[i], max: maxArray[i]})
       }
       option.radar = {}
@@ -619,7 +627,7 @@ export default {
       // 组装series
       let serieObj = {}
       let data = []
-      for (let i=0; i<dataKey.length; i++) {
+      for (let i = 0; i < dataKey.length; i++) {
         data.push({name: dataKey[i], value: dataValue[i]})
       }
       serieObj.type = 'radar'
@@ -628,15 +636,15 @@ export default {
 
       return option
     },
-    getRadarChart() {
+    getRadarChart () {
       let option = this.buildBaseOptions()
-      option.tooltip = this.buildTooltipAttr("item")
+      option.tooltip = this.buildTooltipAttr('item')
       option = this.buildRadarAndSeries(option)
       console.log(option)
-      return option;
+      return option
     },
     // funnel
-    buildFunnelSeries(){
+    buildFunnelSeries () {
       return [{
         name: this.defaultOptions.series[0].cname,
         type: 'funnel',
@@ -644,7 +652,7 @@ export default {
         maxSize: '90%',
         gap: 2,
         label: {
-          position: 'inside',
+          position: 'inside'
         },
         emphasis: {
           label: {
@@ -656,7 +664,7 @@ export default {
         data: this.getDefaultSerieData()
       }]
     },
-    getFunnelChart() {
+    getFunnelChart () {
       let option = this.buildBaseOptions()
       option.tooltip = this.buildTooltipAttr('item')
       option.series = this.buildFunnelSeries()
@@ -665,17 +673,16 @@ export default {
       return option
     },
     // scatter
-    buildScatterData(colName) {
+    buildScatterData (colName) {
       let data = []
       const yAxisData = this.yAxisDataObj[colName]
-      for (let i=0; i<this.xAxisData.length; i++) {
+      for (let i = 0; i < this.xAxisData.length; i++) {
         data.push([this.xAxisData[i], yAxisData[i]])
       }
       return data
     },
-    buildScatterSeries() {
-      const len = this.seriesColName.length;
-      let series = [];
+    buildScatterSeries () {
+      let series = []
       this.seriesColName.forEach(colName => {
         let serie = {
           symbolSize: 15,
@@ -684,20 +691,20 @@ export default {
         serie.data = this.buildScatterData(colName)
         series.push(serie)
       })
-      return series;
+      return series
     },
-    getScatterChart() {
+    getScatterChart () {
       // @todo 需要后续优化显示的方式
       let option = this.buildBaseOptions()
-      option.xAxis = this.buildXAxisAttr();
-      option.yAxis = this.buildYAxisAttr();
+      option.xAxis = this.buildXAxisAttr()
+      option.yAxis = this.buildYAxisAttr()
       option.tooltip = this.buildTooltipAttr('item')
       option.series = this.buildScatterSeries()
 
       return option
     },
     // treemap
-    buildTreemapLevelOption() {
+    buildTreemapLevelOption () {
       return [{
         itemStyle: {
           normal: {
@@ -711,7 +718,7 @@ export default {
             show: false
           }
         }
-      },{
+      }, {
         itemStyle: {
           normal: {
             borderColor: '#555',
@@ -719,21 +726,21 @@ export default {
             gapWidth: 1
           },
           emphasis: {
-              borderColor: '#888'
+            borderColor: '#888'
           }
         }
-      },{
+      }, {
         colorSaturation: [0.35, 0.5],
         itemStyle: {
-            normal: {
-                borderWidth: 5,
-                gapWidth: 1,
-                borderColorSaturation: 0.6
-            }
+          normal: {
+            borderWidth: 5,
+            gapWidth: 1,
+            borderColorSaturation: 0.6
+          }
         }
       }]
     },
-    buildTreemapSeriesData() {
+    buildTreemapSeriesData () {
       let dstData = []
       Object.keys(this.yAxisDataObj).forEach(seriesCname => {
         let sum = 0
@@ -741,7 +748,7 @@ export default {
         data.name = seriesCname
         const srcData = this.yAxisDataObj[seriesCname]
         data.children = []
-        for (let i=0; i<srcData.length; i++) {
+        for (let i = 0; i < srcData.length; i++) {
           let child = {}
           child.name = this.xAxisData[i]
           child.value = Number(srcData[i])
@@ -755,12 +762,12 @@ export default {
 
       return dstData
     },
-    buildTreemapSeries(option) {
+    buildTreemapSeries (option) {
       let serie = {}
       serie.name = 'root'
       serie.type = 'treemap'
       serie.upperLabel = {
-        show: true,  // 省略不写会显示异常
+        show: true, // 省略不写会显示异常
         height: 30
       }
       serie.levels = this.buildTreemapLevelOption()
@@ -768,7 +775,7 @@ export default {
 
       return [serie]
     },
-    getTreemapChart() {
+    getTreemapChart () {
       let option = this.buildBaseOptions()
       option.tooltip = this.buildTooltipAttr('item')
       option.series = this.buildTreemapSeries(option)
@@ -776,7 +783,7 @@ export default {
       return option
     },
     // guage
-    buildGuageSeries() {
+    buildGuageSeries () {
       // 默认只会处理第一个系列
       const xAxisEname = this.defaultOptions.xAxis.dataCol.ename
       const serieEname = this.defaultOptions.series[0].dataCol.ename
@@ -804,37 +811,37 @@ export default {
       let max = Math.max(...tmpData)
 
       // 用于推测仪表盘上下限的数值
-      if (min === max) {  // 说明只有一组数据
-          if (max > 0) {
-            min = 0
-          } else {
-            min -= 10
-            max += 10
-          }
-      } else if (min > 0){
-          max = (parseInt(max / 10) + 1) * 10
+      if (min === max) { // 说明只有一组数据
+        if (max > 0) {
           min = 0
+        } else {
+          min -= 10
+          max += 10
+        }
+      } else if (min > 0) {
+        max = (parseInt(max / 10) + 1) * 10
+        min = 0
       } else {
-          max = (parseInt(max / 10) + 1) * 10
-          min = (parseInt(min / 10) -1) * 10
+        max = (parseInt(max / 10) + 1) * 10
+        min = (parseInt(min / 10) - 1) * 10
       }
       serie.min = min
       serie.max = max
 
       return [serie]
     },
-    getGaugeChart() {
+    getGaugeChart () {
       // 多于1个系列，默认只显示第1个
       let option = this.buildBaseOptions()
       option.legend.show = false
       option.tooltip = this.buildTooltipAttr('item')
-      option.tooltip.formatter = "{a} <br/>{b} : {c}"
+      option.tooltip.formatter = '{a} <br/>{b} : {c}'
       option.series = this.buildGuageSeries()
 
       return option
     },
     // wordCloud
-    buildWordCloudTextStyle() {
+    buildWordCloudTextStyle () {
       return {
         normal: {
           fontFamily: 'sans-serif',
@@ -853,7 +860,7 @@ export default {
         }
       }
     },
-    buildWordCloudSeries() {
+    buildWordCloudSeries () {
       let serieObj = {
         type: 'wordCloud',
         shape: 'circle',
@@ -874,7 +881,7 @@ export default {
 
       return [serieObj]
     },
-    getWordCloudChart() {
+    getWordCloudChart () {
       let option = this.buildBaseOptions()
       option.tooltip = this.buildTooltipAttr('item')
       option.series = this.buildWordCloudSeries()
@@ -882,7 +889,7 @@ export default {
       return option
     },
     // map
-    buildMapSeries() {
+    buildMapSeries () {
       let serieObj = {
         type: 'map',
         roam: true,
@@ -909,7 +916,7 @@ export default {
 
       return serieObj
     },
-    getMapChart() {
+    getMapChart () {
       let option = this.buildBaseOptions()
       option.tooltip = this.buildTooltipAttr('item')
       option.tooltip.formatter = '{b} : {c}'
@@ -918,9 +925,9 @@ export default {
       return option
     },
     // heatmap
-    buildHeatmapGeo() {
+    buildHeatmapGeo () {
       return {
-        map: "china",
+        map: 'china',
         roam: true,
         label: {
           show: false
@@ -939,7 +946,7 @@ export default {
         }
       }
     },
-    buildHeatmapVisualMap() {
+    buildHeatmapVisualMap () {
       return {
         show: true,
         min: 0,
@@ -953,7 +960,7 @@ export default {
         }
       }
     },
-    buildHeatmapSeries(visualMap) {
+    buildHeatmapSeries (visualMap) {
       // 只使用第1个的序列的数据
       const srcData = this.getDefaultSerieData()
       let serieObj = {
@@ -977,17 +984,17 @@ export default {
 
       let maxNum = Math.max(...maxArray)
       let length = 1
-      for (length; length<10; length++) {
+      for (length; length < 10; length++) {
         maxNum = Math.ceil(maxNum / 10)
         if (maxNum <= 10) {
           break
         }
       }
-      visualMap.max = maxNum * (10**length)
+      visualMap.max = maxNum * (10 ** length)
 
       return [serieObj]
     },
-    getHeatmapChart() {
+    getHeatmapChart () {
       let option = this.buildBaseOptions()
       option.tooltip = this.buildTooltipAttr('item')
       option.visualMap = this.buildHeatmapVisualMap()
@@ -997,13 +1004,13 @@ export default {
       return option
     },
     // table
-    getTableChart() {
+    getTableChart () {
       this.tableData = []
       this.tableCol = []
       this.tableCol.push(this.defaultOptions.xAxis.name, ...Object.keys(this.yAxisDataObj))
 
       const length = this.xAxisData.length
-      for (let i=0; i<length; i++) {
+      for (let i = 0; i < length; i++) {
         let row = {}
         this.tableCol.forEach(xColCname => {
           if (xColCname === this.defaultOptions.xAxis.name) {
@@ -1015,15 +1022,15 @@ export default {
         this.tableData.push(row)
       }
     },
-    buildGraphLinks(dataLength) {
+    buildGraphLinks (dataLength) {
       let links = []
-      for (let i=0; i< dataLength - 1; i++) {
-        links.push({source: i, target: i+1})
+      for (let i = 0; i < dataLength - 1; i++) {
+        links.push({source: i, target: i + 1})
       }
 
       return links
     },
-    buildGraphSeries(option) {
+    buildGraphSeries (option) {
       let series = []
       Object.keys(this.yAxisDataObj).forEach(serieCname => {
         let serie = {}
@@ -1042,7 +1049,7 @@ export default {
 
       return series
     },
-    getGraphChart() {
+    getGraphChart () {
       let option = this.buildBaseOptions()
       option.tooltip = this.buildTooltipAttr('item')
       option.xAxis = this.buildXAxisAttr()
@@ -1053,7 +1060,7 @@ export default {
       return option
     }
   }
-};
+}
 </script>
 
 <style>

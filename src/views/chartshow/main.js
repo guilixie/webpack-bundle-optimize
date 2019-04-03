@@ -2,11 +2,13 @@
 // (runtime-only or standalone) has been set in webpack.base.conf with an alias.
 import Vue from 'vue'
 import 'normalize.css'
+import { Loading } from 'element-ui'
 import '@/assets/style/common.css'
 import '@/assets/icons'
 import App from './App'
 
 Vue.config.productionTip = false
+Vue.use(Loading.directive)
 
 /* eslint-disable no-new */
 new Vue({

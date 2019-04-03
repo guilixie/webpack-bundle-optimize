@@ -8,8 +8,8 @@
 </template>
 
 <script>
-import TableView from '@/components/TableView'
 import FooterMenu from '@/components/FooterMenu'
+const TableView = () => import(/* webpackChunkName: 'table-view' */'@/components/TableView')
 
 const Mock = require('mockjs')
 const Random = Mock.Random

@@ -1,5 +1,5 @@
 import { setOuts } from './index'
-import store from '../store'
+import store from '../views/flowshow/store'
 
 export default function (state, activeNode) {
   /* 根据不同code，节点属性不同 */

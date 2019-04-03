@@ -139,6 +139,10 @@ html, body {
   padding: 15px;
 }
 
+.border-box {
+  border: 1px solid #ebeef5;
+}
+
 /* components / ParameterUnit 组件必选样式 */
 .el-form-item.is-required:not(.is-no-asterisk) .title-label:before {
   content: '*';
